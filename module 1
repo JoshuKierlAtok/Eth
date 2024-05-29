@@ -4,10 +4,12 @@ pragma solidity ^0.8.0;
 contract AtokDonation {
     address public owner;
     uint public totalDonations;
-    uint public constant MIN_DONATION = 10; // Minimum donation amount
+    uint public constant MIN_DONATION = 100; // Minimum donation amount
+    uint public minRefundAmount; // Minimum refund amount
 
     event Donated(address indexed from, uint amount);
     event Withdrawn(address indexed to, uint amount, string cause);
+    event Refunded(address indexed to, uint amount);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function");
@@ -16,6 +18,7 @@ contract AtokDonation {
 
     constructor() {
         owner = msg.sender;
+        minRefundAmount = 200; // Initial minimum refund amount
     }
 
     function donate() public payable {
@@ -29,6 +32,17 @@ contract AtokDonation {
         totalDonations -= _amount;
         payable(owner).transfer(_amount);
         emit Withdrawn(owner, _amount, cause);
+    }
+
+    function refundDonation(address payable _donor, uint _amount) public onlyOwner {
+        require(_amount >= minRefundAmount && _amount <= totalDonations, "Invalid refund amount");
+        totalDonations -= _amount;
+        _donor.transfer(_amount);
+        emit Refunded(_donor, _amount);
+    }
+
+    function setMinRefundAmount(uint _newMinRefundAmount) public onlyOwner {
+        minRefundAmount = _newMinRefundAmount;
     }
 
     function getDonationBalance() public view returns (uint) {
