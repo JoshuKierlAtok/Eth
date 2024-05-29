@@ -64,8 +64,8 @@ export default function HomePage() {
   const deposit = async () => {
     if (atm) {
       let tx = await atm.deposit(1);
-      await tx.wait();
-      addTransactionToHistory("Deposit", 1);
+      let receipt = await tx.wait();
+      addTransactionToHistory("Deposit", 1, receipt);
       getBalance();
     }
   };
@@ -73,17 +73,20 @@ export default function HomePage() {
   const withdraw = async () => {
     if (atm) {
       let tx = await atm.withdraw(1);
-      await tx.wait();
-      addTransactionToHistory("Withdraw", 1);
+      let receipt = await tx.wait();
+      addTransactionToHistory("Withdraw", 1, receipt);
       getBalance();
     }
   };
 
-  const addTransactionToHistory = (type, amount) => {
+  const addTransactionToHistory = (type, amount, receipt) => {
     const newTransaction = {
       type,
       amount,
       timestamp: new Date().toLocaleString(),
+      transactionHash: receipt.transactionHash,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
     };
     setTransactionHistory([...transactionHistory, newTransaction]);
   };
@@ -122,6 +125,12 @@ export default function HomePage() {
           {transactionHistory.map((tx, index) => (
             <li key={index}>
               {tx.timestamp} - {tx.type} {tx.amount} ETH
+              <br />
+              Hash: {tx.transactionHash}
+              <br />
+              Block: {tx.blockNumber}
+              <br />
+              Gas Used: {tx.gasUsed}
             </li>
           ))}
         </ul>
