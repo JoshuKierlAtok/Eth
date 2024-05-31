@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Atokshop is ERC20, Ownable {
 
     mapping(uint256 => uint256) public ShopPrices;
+    mapping(address => uint256[]) public Bag;  // Mapping to store items in the bag for each address
 
     constructor() ERC20("Degen", "DGN") Ownable(msg.sender) {
         ShopPrices[1] = 150;
@@ -36,12 +37,14 @@ contract Atokshop is ERC20, Ownable {
         return saleOptions;
     }
 
-    function redeem(address, uint256 _item) public {
+    function redeem(address _recipient, uint256 _item) public {
         require(ShopPrices[_item] > 0, "Item is not available.");
         require(_item <= 4, "Item is not available.");
         require(balanceOf(msg.sender) >= ShopPrices[_item], "Redeem Failed: Insufficient balance.");
         
         _transfer(msg.sender, owner(), ShopPrices[_item]);  // Transfer tokens to the contract owner
+        
+        Bag[_recipient].push(_item);  // Map redeemed item to the recipient's bag
     }
     
     function burn(uint256 _amount) public {
@@ -53,8 +56,9 @@ contract Atokshop is ERC20, Ownable {
         return balanceOf(msg.sender);
     }
 
-    function getRedeemedItems(address _user) external view returns (uint256[] memory) {
-        }
+    function getBagItems(address _user) external view returns (uint256[] memory) {
+        return Bag[_user];  // Function to get items in the bag for a specific user
+    }
 
     function decimals() override public pure returns (uint8) {
         return 0;
